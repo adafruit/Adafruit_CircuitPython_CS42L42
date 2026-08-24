@@ -1,7 +1,6 @@
-# SPDX-FileCopyrightText: 2017 Scott Shawcroft, written for Adafruit Industries
 # SPDX-FileCopyrightText: Copyright (c) 2026 Tim Cocks for Adafruit Industries
 #
-# SPDX-License-Identifier: Unlicense
+# SPDX-License-Identifier: MIT
 """
 Play a one-octave scale out the headphone jack with synthio.
 
@@ -19,10 +18,7 @@ example:
 * **Clocks before the codec.** Out of reset the codec runs from an internal RC
   oscillator that is good for I2C and nothing else, and ``configure_clocks`` is
   the handover to the incoming bit clock. Playing the synth is what starts that
-  bit clock, so it goes first -- and the datasheet (5.1) wants RESET released
-  after the clocks appear rather than before. The codec makes no sound until
-  ``headphone_output`` is enabled a few lines later, which is why starting
-  playback this early is harmless.
+  bit clock, so it goes first.
 
 ``board.OSC_EN`` gates the SP-1's audio oscillator and has to be on.
 """
@@ -67,15 +63,11 @@ synth = synthio.Synthesizer(sample_rate=RATE)
 # pressed, so nothing is audible yet.
 i2s.play(synth)
 
-# Constructing the driver releases the reset -- now that the clocks it wants
-# released into (datasheet 5.1) are running -- and then talks to the codec.
+# Constructing the driver releases the reset
 codec = adafruit_cs42l42.CS42L42(board.I2C(), reset_pin=reset)
 codec.configure_clocks(sclk_hz=SCLK)
 codec.configure_asp(sample_rate=RATE, bit_depth=16)
 
-# headphone_output is a quickstart that deliberately ends quiet: -20 dB of
-# mixer attenuation with the -6 dB analog pad engaged. Raise it a few dB at a
-# time from there.
 codec.headphone_output = True
 codec.dac_volume = DAC_VOLUME
 
@@ -88,9 +80,6 @@ try:
             synth.release(note)
             time.sleep(0.125)
 finally:
-    # Ctrl-C lands here. Releasing the pins as well as the I2S matters at the
-    # REPL: an import that dies with them still claimed makes the next one
-    # fail with ``ValueError: OSC_EN in use``.
     codec.muted = True
     i2s.stop()
     i2s.deinit()

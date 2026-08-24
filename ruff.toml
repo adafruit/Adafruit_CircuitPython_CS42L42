@@ -92,6 +92,9 @@ ignore = [
     "PLR2004", # magic-value-comparison
     "UP030", # format literals
     "PLW1514",  # unspecified-encoding
+    "PLR0917", # too many positional args
+    "PLR0913", # too many args
+    "PLR0904", # too many public methods
 
 ]
 

@@ -55,8 +55,8 @@ table are supported; `SUPPORTED_SCLK_RATES` lists them.
 The CS42L42 can also *generate* LRCK from an incoming SCLK, the datasheet calls
 this Hybrid-Master mode. It's for boards where a fixed oscillator feeds SCLK and
 the microcontroller is an I2S follower on both clocks; pass ``generate_lrck=True``
- to `CS42L42.configure_asp` along with the number of bit clocks per frame. Every
-  other board wants the default, ``generate_lrck=False``.
+to `CS42L42.configure_asp` along with the number of bit clocks per frame. Every
+other board wants the default, ``generate_lrck=False``.
 
 **Reset**
 
@@ -104,8 +104,8 @@ class PagedI2CRegisterAccessor(I2CRegisterAccessor):
     Register addresses given to the descriptors are the two-byte form the
     datasheets print, ``page << 8 | register``: address ``0x2001`` is register
     ``0x01`` of page ``0x20``. That keeps a driver's register constants
-    readable against its datasheet while ordinary `RWBit`, `RWBits`,
-    `UnaryStruct` and `Struct` descriptors do the work.
+    readable against its datasheet while ordinary ``RWBit``, ``RWBits``,
+    ``UnaryStruct`` and ``Struct`` descriptors do the work.
 
     The selected page is remembered, so a run of accesses to one page costs a
     single transaction each; only a change of page adds a second one. Nothing
@@ -835,9 +835,7 @@ class CS42L42:
         if use_src is None:
             use_src = sample_rate != internal_rate
         if not use_src and sample_rate != internal_rate:
-            raise ValueError(
-                f"use_src=False needs sample_rate to equal FsINT ({internal_rate} Hz)"
-            )
+            raise ValueError(f"use_src=False needs sample_rate to equal FsINT ({internal_rate} Hz)")
 
         self._sample_rate = sample_rate
         self._bit_depth = bit_depth

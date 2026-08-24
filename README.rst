@@ -39,18 +39,8 @@ or individual libraries can be installed using
 `circup <https://github.com/adafruit/circup>`_.
 
 
-
-.. todo:: Describe the Adafruit product this library works with. For PCBs, you can also add the
-image from the assets folder in the PCB's GitHub repo.
-
-`Purchase one from the Adafruit shop <http://www.adafruit.com/products/>`_
-
 Installing from PyPI
 =====================
-.. note:: This library is not available on PyPI yet. Install documentation is included
-   as a standard element. Stay tuned for PyPI availability!
-
-.. todo:: Remove the above note if PyPI version is/will be available at time of release.
 
 On supported GNU/Linux systems like the Raspberry Pi, you can install the driver locally `from
 PyPI <https://pypi.org/project/adafruit-circuitpython-cs42l42/>`_.
@@ -101,8 +91,73 @@ Or the following command to update an existing version:
 Usage Example
 =============
 
-.. todo:: Add a quick, simple example. It and other examples should live in the
-examples folder and be included in docs/examples.rst.
+.. code-block:: python
+
+    import time
+
+    import audiobusio
+    import board
+    import digitalio
+    import synthio
+
+    import adafruit_cs42l42
+
+    RATE = 48000
+    # CircuitPython sends 32 bit clocks per stereo frame, so the bit clock the
+    # codec sees -- and the number configure_clocks wants -- is 32 x the rate.
+    SCLK = RATE * 32
+
+    # Mixer attenuation, dB. 0 is full scale; the quickstart starts at -20.
+    DAC_VOLUME = -20
+
+    # MIDI note numbers for a C-major scale, C4 up to C5.
+    SCALE = (60, 62, 64, 65, 67, 69, 71, 72)
+
+    # CAUTION: this drives a headphone amplifier. Take the headphones off before
+    # the first run and confirm the level is comfortable before wearing them.
+
+    oscillator = digitalio.DigitalInOut(board.OSC_EN)
+    oscillator.direction = digitalio.Direction.OUTPUT
+    oscillator.value = True
+
+    reset = digitalio.DigitalInOut(board.CS42_RESET)
+    reset.direction = digitalio.Direction.OUTPUT
+    reset.value = False  # active low: hold the codec in reset while clocks start
+
+    i2s = audiobusio.I2SOut(board.I2S_BIT_CLOCK, board.I2S_WORD_SELECT, board.I2S_DOUT)
+
+    synth = synthio.Synthesizer(sample_rate=RATE)
+
+    # Playing the synth starts the bit clock, which the codec needs before it can
+    # switch off its own oscillator. The synth streams silence until a note is
+    # pressed, so nothing is audible yet.
+    i2s.play(synth)
+
+    # Constructing the driver releases the reset
+    codec = adafruit_cs42l42.CS42L42(board.I2C(), reset_pin=reset)
+    codec.configure_clocks(sclk_hz=SCLK)
+    codec.configure_asp(sample_rate=RATE, bit_depth=16)
+
+    codec.headphone_output = True
+    codec.dac_volume = DAC_VOLUME
+
+    print("playing scale")
+    try:
+        while True:
+            for note in SCALE:
+                synth.press(note)
+                time.sleep(0.25)
+                synth.release(note)
+                time.sleep(0.125)
+    finally:
+        codec.muted = True
+        i2s.stop()
+        i2s.deinit()
+        reset.value = False
+        reset.deinit()
+        oscillator.value = False
+        oscillator.deinit()
+
 
 Documentation
 =============
