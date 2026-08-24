@@ -716,7 +716,7 @@ class CS42L42:
         if sclk_hz not in settings:
             raise ValueError(
                 f"no PLL setting for sclk_hz={sclk_hz} at mclk_int={mclk_int}; "
-                f"supported: {sorted(settings)}"
+                + f"supported: {sorted(settings)}"
             )
 
         # Section 5.1: start from everything powered down with the PLL stopped.
